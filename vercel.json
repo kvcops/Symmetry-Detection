@@ -2,7 +2,11 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": ["static/**/*"],
+        "excludeFiles": ["large_files/**/*"]
+      }
     }
   ],
   "routes": [
