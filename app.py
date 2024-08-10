@@ -2,16 +2,26 @@ from flask import Flask, request, jsonify, render_template
 import cv2
 import numpy as np
 import base64
-import io
+import tempfile
+import os
 from PIL import Image
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
 def load_image(file):
-    img = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_GRAYSCALE)
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+        temp_file_path = temp_file.name
+        file.save(temp_file_path)
+    
+    # Load the image from the temporary file
+    img = cv2.imread(temp_file_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise ValueError("Unable to load image")
+    
+    # Remove the temporary file after loading
+    os.remove(temp_file_path)
     return img
 
 def preprocess_image(img):
