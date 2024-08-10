@@ -3,3 +3,4 @@ opencv-python-headless==4.8.0.74
 numpy==1.24.4
 Pillow==10.0.0
 matplotlib==3.7.2
+gunicorn==20.1.0
