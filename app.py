@@ -10,28 +10,32 @@ import matplotlib.pyplot as plt
 app = Flask(__name__)
 
 def load_image(file):
-    # Create a temporary file
+    """
+    Save and load the uploaded image.
+    """
     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
         temp_file_path = temp_file.name
         file.save(temp_file_path)
     
-    # Load the image from the temporary file
     img = cv2.imread(temp_file_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise ValueError("Unable to load image")
     
-    # Remove the temporary file after loading
     os.remove(temp_file_path)
     return img
 
 def preprocess_image(img):
-    # Apply thresholding to create a binary image
+    """
+    Threshold and detect edges.
+    """
     _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
-    # Apply edge detection
     edges = cv2.Canny(binary, 50, 150)
     return edges
 
 def check_symmetry(img, axis_type, threshold=0.95):
+    """
+    Check symmetry along a specified axis.
+    """
     h, w = img.shape[:2]
     if axis_type == "vertical":
         mid = w // 2
@@ -49,6 +53,9 @@ def check_symmetry(img, axis_type, threshold=0.95):
     return similarity > threshold
 
 def check_rotational_symmetry(img, n=3, threshold=0.95):
+    """
+    Check for n-fold rotational symmetry.
+    """
     h, w = img.shape[:2]
     center = (w // 2, h // 2)
     angle = 360 // n
@@ -58,6 +65,9 @@ def check_rotational_symmetry(img, n=3, threshold=0.95):
     return similarity > threshold
 
 def draw_symmetry_line(img, axis_type):
+    """
+    Draw symmetry lines on the image.
+    """
     h, w = img.shape[:2]
     result = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     if axis_type == "vertical":
@@ -70,6 +80,9 @@ def draw_symmetry_line(img, axis_type):
     return result
 
 def draw_rotational_symmetry(img, n):
+    """
+    Draw lines for rotational symmetry.
+    """
     h, w = img.shape[:2]
     result = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     center = (w // 2, h // 2)
@@ -82,6 +95,9 @@ def draw_rotational_symmetry(img, n):
     return result
 
 def analyze_symmetry(img):
+    """
+    Analyze and return symmetry results.
+    """
     preprocessed = preprocess_image(img)
     results = []
     for axis in ["vertical", "horizontal", "diagonal"]:
@@ -89,7 +105,7 @@ def analyze_symmetry(img):
             img_with_line = draw_symmetry_line(img, axis)
             results.append((f"{axis.capitalize()} symmetry", img_with_line))
     
-    for n in [2, 3, 4]:  # Check for 2-fold, 3-fold, and 4-fold rotational symmetry
+    for n in [2, 3, 4]:  # Check 2, 3, and 4-fold symmetry
         if check_rotational_symmetry(preprocessed, n):
             img_with_rotation = draw_rotational_symmetry(img, n)
             results.append((f"{n}-fold rotational symmetry", img_with_rotation))
@@ -100,15 +116,24 @@ def analyze_symmetry(img):
     return results
 
 def encode_image(img):
+    """
+    Encode image as base64 string.
+    """
     _, buffer = cv2.imencode('.png', img)
     return base64.b64encode(buffer).decode('utf-8')
 
 @app.route('/')
 def index():
+    """
+    Render the home page.
+    """
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    """
+    Handle image upload and analysis.
+    """
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
 
